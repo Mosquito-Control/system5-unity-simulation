@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""
+Export Unity sim camera positions (cam0..cam7) to GeoJSON for the dashboard.
+
+The Unity HK scene has no documented WGS84 georeference — the FBX sits at
+Unity origin and the 8 cameras are defined in Unity meters in
+Assets/HongKong/hk_setup.json. To put them on the MapLibre map we have to
+pick an anchor. We pick the one that makes the project coherent:
+
+    Unity (X=900, Z=2000)  ≡  WGS84 (lon=114.1694, lat=22.3193)
+
+Why this anchor:
+  - All 8 cameras' lookAt is (~900, 140, 2000) — that point is the natural
+    "scene center" the ring is built around.
+  - (114.1694, 22.3193) is HK_CENTER in the frontend (map-canvas.tsx) AND
+    the reference_origin in System 2's cameras.yaml. Re-using it keeps the
+    three systems on a single anchor instead of three drifting ones.
+  - Result: cam ring fans around the Tsim Sha Tsui / Victoria Harbour
+    waterfront, which matches the "real-scale Victoria Harbour" framing
+    in SIMULATION_PLAN.md.
+
+Axis mapping: Unity is left-handed, +Y up, +Z forward (per SIMULATION_PLAN
+§Conventions). We map +X → East, +Z → North, +Y → altitude. This is the
+standard Unity-ENU mapping and preserves the camera-ring layout visually.
+
+Conversion uses a flat-earth approximation around the anchor latitude —
+accurate to <1 m for points within ~5 km, which covers the whole scene.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+
+# --- Anchor (Unity scene-focal point ↔ Mong Kok / dense Kowloon) -------------
+# Verified against the bundled satellite texture Map_Texture/Hong_Kong_Color.jpg.
+# The Hong_Kong.fbx is a 15.6×8.6 km TerraMesh export covering Victoria Harbour
+# AND the Kowloon mainland — FBX origin sits ~West Kowloon waterfront, and the
+# lookAt at Unity (900, 2000) lands ~2 km north over the dense Kowloon street
+# grid (Mong Kok). The "Victoria Harbour" wording in the original commit refers
+# to the FBX's coverage scope, not where the drone flies — the drone flight
+# area is over Mong Kok rooftops at 80–200 m altitude.
+ANCHOR_UNITY_X = 900.0
+ANCHOR_UNITY_Z = 2000.0
+ANCHOR_LAT = 22.318
+ANCHOR_LON = 114.169
+
+METERS_PER_DEG_LAT = 111320.0
+METERS_PER_DEG_LON = 111320.0 * math.cos(math.radians(ANCHOR_LAT))
+
+# --- HK sanity bbox (rough envelope, used only to fail loud on bad anchors) --
+HK_BBOX = (113.8, 22.1, 114.5, 22.6)  # (lon_min, lat_min, lon_max, lat_max)
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+HK_SETUP = (
+    REPO_ROOT
+    / "Orgs/system4-unity-simulation/Assets/HongKong/hk_setup.json"
+)
+OUT_PATH = (
+    REPO_ROOT
+    / "Orgs/system3-operator-dashboard/public/data/sim-cameras.geojson"
+)
+
+
+def unity_to_lonlat(x: float, z: float) -> tuple[float, float]:
+    east_m = x - ANCHOR_UNITY_X
+    north_m = z - ANCHOR_UNITY_Z
+    lon = ANCHOR_LON + east_m / METERS_PER_DEG_LON
+    lat = ANCHOR_LAT + north_m / METERS_PER_DEG_LAT
+    return lon, lat
+
+
+def main() -> int:
+    with HK_SETUP.open() as fh:
+        setup = json.load(fh)
+
+    features: list[dict] = []
+    for cam in setup["cameras"]:
+        name = cam["name"]
+        pos = cam["pos"]
+        look = cam["lookAt"]
+        ux, uy, uz = float(pos["x"]), float(pos["y"]), float(pos["z"])
+        lon, lat = unity_to_lonlat(ux, uz)
+
+        lon_min, lat_min, lon_max, lat_max = HK_BBOX
+        if not (lon_min <= lon <= lon_max and lat_min <= lat <= lat_max):
+            raise SystemExit(
+                f"{name} converted to ({lon:.5f}, {lat:.5f}) — outside HK "
+                f"bbox {HK_BBOX}. The anchor is wrong."
+            )
+
+        # Heading: where the camera looks, projected onto the XZ plane, in
+        # geographic degrees (0 = north, 90 = east) — handy for the popup.
+        dx = float(look["x"]) - ux
+        dz = float(look["z"]) - uz
+        heading_deg = (math.degrees(math.atan2(dx, dz)) + 360.0) % 360.0
+
+        features.append(
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [round(lon, 7), round(lat, 7)],
+                },
+                "properties": {
+                    "source": "sim_unity",
+                    "source_key": name,
+                    "name": f"Sim {name}",
+                    "monitored": True,
+                    "alt_m": uy,
+                    "unity_x": ux,
+                    "unity_y": uy,
+                    "unity_z": uz,
+                    "fov": cam.get("fov"),
+                    "heading_deg": round(heading_deg, 1),
+                },
+            }
+        )
+
+    out = {
+        "type": "FeatureCollection",
+        "metadata": {
+            "anchor": {
+                "unity_x": ANCHOR_UNITY_X,
+                "unity_z": ANCHOR_UNITY_Z,
+                "lat": ANCHOR_LAT,
+                "lon": ANCHOR_LON,
+            },
+            "source_file": str(HK_SETUP.relative_to(REPO_ROOT)),
+            "note": "Generated by Tools/export_camera_geojson.py — do not edit by hand.",
+        },
+        "features": features,
+    }
+
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with OUT_PATH.open("w") as fh:
+        json.dump(out, fh, indent=2)
+        fh.write("\n")
+
+    print(f"wrote {len(features)} sim cams → {OUT_PATH.relative_to(REPO_ROOT)}")
+    for f in features:
+        lon, lat = f["geometry"]["coordinates"]
+        p = f["properties"]
+        print(
+            f"  {p['source_key']:5s}  unity=({p['unity_x']:>6.0f}, "
+            f"{p['unity_y']:>4.0f}, {p['unity_z']:>6.0f})  "
+            f"→  ({lon:.5f}, {lat:.5f})  alt={p['alt_m']:.0f}m  "
+            f"hdg={p['heading_deg']:.0f}°"
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
