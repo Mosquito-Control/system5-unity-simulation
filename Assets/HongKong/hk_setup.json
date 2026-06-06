@@ -1,0 +1,51 @@
+{
+  "city": {
+    "scale": 1.0,
+    "position": { "x": 0, "y": 0, "z": 0 },
+    "rotationY": 0,
+    "deleteChildren": [],
+    "keepOnlyChildren": []
+  },
+  "materialRules": [],
+  "cameras": [
+    { "name": "cam0", "pos": { "x": 900, "y": 15, "z": 1320 }, "lookAt": { "x": 900, "y": 140, "z": 2000 }, "fov": 50, "far": 6000 },
+    { "name": "cam1", "pos": { "x": 1450, "y": 55, "z": 1500 }, "lookAt": { "x": 900, "y": 140, "z": 2000 }, "fov": 50, "far": 6000 },
+    { "name": "cam2", "pos": { "x": 1550, "y": 100, "z": 1850 }, "lookAt": { "x": 900, "y": 140, "z": 2000 }, "fov": 50, "far": 6000 },
+    { "name": "cam3", "pos": { "x": 1400, "y": 190, "z": 2450 }, "lookAt": { "x": 900, "y": 130, "z": 2000 }, "fov": 50, "far": 6000 },
+    { "name": "cam4", "pos": { "x": 900, "y": 90, "z": 2600 }, "lookAt": { "x": 900, "y": 140, "z": 2000 }, "fov": 50, "far": 6000 },
+    { "name": "cam5", "pos": { "x": 350, "y": 160, "z": 2450 }, "lookAt": { "x": 900, "y": 130, "z": 2000 }, "fov": 50, "far": 6000 },
+    { "name": "cam6", "pos": { "x": 280, "y": 65, "z": 1650 }, "lookAt": { "x": 900, "y": 140, "z": 2000 }, "fov": 50, "far": 6000 },
+    { "name": "cam7", "pos": { "x": 900, "y": 550, "z": 2050 }, "lookAt": { "x": 900, "y": 0, "z": 2000 }, "fov": 80, "far": 6000 }
+  ],
+  "path": {
+    "clearanceRadius": 5,
+    "waypoints": [
+      { "x": 600, "y": 80, "z": 1700 },
+      { "x": 900, "y": 110, "z": 1650 },
+      { "x": 1200, "y": 140, "z": 1750 },
+      { "x": 1260, "y": 175, "z": 2000 },
+      { "x": 1130, "y": 200, "z": 2230 },
+      { "x": 900, "y": 160, "z": 2350 },
+      { "x": 600, "y": 120, "z": 2250 },
+      { "x": 450, "y": 90, "z": 2000 }
+    ]
+  },
+  "look": {
+    "sunEuler": { "x": 17, "y": 255, "z": 0 },
+    "sunIntensity": 1.35,
+    "sunColor": { "x": 1.0, "y": 0.87, "z": 0.72 },
+    "fog": true,
+    "fogColor": { "x": 0.72, "y": 0.74, "z": 0.77 },
+    "fogDensity": 0.00030,
+    "skyAtmosphere": 1.1,
+    "skyTint": { "x": 0.48, "y": 0.56, "z": 0.7 },
+    "bloom": 0.4,
+    "postExposure": 0.35,
+    "contrast": 14,
+    "saturation": 15,
+    "temperature": 10,
+    "shadowDistance": 1200
+  },
+  "spectator": { "name": "spec", "pos": { "x": 500, "y": 280, "z": 1100 }, "lookAt": { "x": 1800, "y": 150, "z": 3300 }, "fov": 62, "far": 40000 },
+  "vista": { "name": "v", "pos": { "x": 500, "y": 280, "z": 1100 }, "lookAt": { "x": 1800, "y": 150, "z": 3300 }, "fov": 62, "far": 40000 }
+}

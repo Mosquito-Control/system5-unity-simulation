@@ -19,8 +19,15 @@ tar xzf mtx.tar.gz
 
 ## 2. Install the build
 
-Copy `Builds/macOS/DroneSim.app` to the Mac (AirDrop/scp/USB), then de-quarantine it
-(unsigned build — macOS will block it otherwise):
+Download the prebuilt app from the team repo's releases:
+
+```bash
+cd ~
+curl -L -o DroneSim-macOS.zip https://github.com/Tion-ping/system4-unity-simulation/releases/download/v0.2-hongkong/DroneSim-macOS.zip
+unzip -q DroneSim-macOS.zip
+```
+
+Then de-quarantine it (unsigned build — macOS will block it otherwise):
 
 ```bash
 xattr -dr com.apple.quarantine ~/DroneSim.app

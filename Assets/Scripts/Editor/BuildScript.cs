@@ -9,7 +9,17 @@ using UnityEngine;
 /// </summary>
 public static class BuildScript
 {
-    static readonly string[] Scenes = { "Assets/Scenes/SimScene.unity" };
+    // Build whatever EditorBuildSettings says (DroneSim/HK/7 switches it); SimScene is the fallback.
+    static string[] Scenes
+    {
+        get
+        {
+            var enabled = System.Array.FindAll(EditorBuildSettings.scenes, s => s.enabled);
+            return enabled.Length > 0
+                ? System.Array.ConvertAll(enabled, s => s.path)
+                : new[] { "Assets/Scenes/SimScene.unity" };
+        }
+    }
 
     public static void BuildMac()
     {

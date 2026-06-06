@@ -13,6 +13,6 @@
     { "name": "cam6", "enabled": true },
     { "name": "cam7", "enabled": true }
   ],
-  "drone": { "scale": 2.0, "path_speed_mps": 8.0 },
+  "drone": { "scale": 4.0, "path_speed_mps": 10.0 },
   "control": { "udp_port": 9871, "failsafe_ms": 250, "mode": "autopilot" }
 }
