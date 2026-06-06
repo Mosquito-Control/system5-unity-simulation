@@ -1,0 +1,9 @@
+# MediaMTX — RTSP/HLS server the sim publishes into and the ML container reads from.
+#   docker compose up -d
+# RTSP: rtsp://<host>:8554/cam0..cam7   |   HLS preview: http://<host>:8888/cam0
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx
+    network_mode: host # RTSP :8554 + HLS :8888 directly on the host network
+    restart: unless-stopped

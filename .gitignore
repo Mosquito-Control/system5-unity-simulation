@@ -105,3 +105,18 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Local dev tooling (downloaded binaries)
+Tools/mediamtx/
+
+# MCP screenshots
+Assets/Screenshots/
+
+# Non-asset captures
+Captures/
+
+# Editor crash recovery + test artifacts
+/Assets/_Recovery/
+/Assets/_Recovery.meta
+/Assets/Screenshots.meta
+Tools/viewer_grid.jpg

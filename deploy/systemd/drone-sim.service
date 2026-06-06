@@ -1,0 +1,18 @@
+# DroneSim — Unity player rendering on the virtual display, streaming RTSP + labels.
+# Expects the build at /opt/dronesim (see deploy/arch-setup.md).
+# NOTE: do NOT add -batchmode — it disables rendering entirely.
+[Unit]
+Description=DroneSim synthetic data simulator
+After=sim-display.service docker.service
+Requires=sim-display.service
+
+[Service]
+Environment=DISPLAY=:1
+Environment=__GL_SYNC_TO_VBLANK=0
+WorkingDirectory=/opt/dronesim
+ExecStart=/opt/dronesim/DroneSim.x86_64 -screen-width 640 -screen-height 360 -screen-fullscreen 0
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
