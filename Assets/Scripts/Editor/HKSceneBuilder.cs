@@ -563,11 +563,25 @@ public static class HKSceneBuilder
 
             rcDrone.transform.position = rc.spawn.V;
             rcDrone.transform.rotation = Quaternion.Euler(0f, rc.yawDeg, 0f);
-            report.Add($"rc: spawn={rc.spawn.V:F0} yaw={rc.yawDeg:F0}");
+
+            // pilot view: V cycles chase / onboard gimbal / spectator on the screen camera
+            var spec = GameObject.Find("SpectatorCamera");
+            if (spec != null)
+            {
+                var pilot = spec.GetComponent<DroneSim.RcPilotCamera>()
+                            ?? spec.AddComponent<DroneSim.RcPilotCamera>();
+                pilot.target = rcDrone.transform;
+            }
+            else Debug.LogWarning("[HK] rc: no SpectatorCamera found — pilot view not wired");
+
+            report.Add($"rc: spawn={rc.spawn.V:F0} yaw={rc.yawDeg:F0} pilotCam={(spec != null ? "wired" : "MISSING")}");
         }
         else if (rcExisting != null)
         {
             UnityEngine.Object.DestroyImmediate(rcExisting.gameObject); // RC disabled in config
+            var specCam = GameObject.Find("SpectatorCamera");
+            var stalePilot = specCam != null ? specCam.GetComponent<DroneSim.RcPilotCamera>() : null;
+            if (stalePilot != null) UnityEngine.Object.DestroyImmediate(stalePilot);
         }
 
         Debug.Log("[HK] PATHS: " + string.Join(" | ", report));
