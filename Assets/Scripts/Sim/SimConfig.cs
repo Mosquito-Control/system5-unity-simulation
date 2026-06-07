@@ -13,6 +13,21 @@ namespace DroneSim
     [Serializable] public class ControlConfig { public int udp_port = 9871; public int failsafe_ms = 250; public string mode = "autopilot"; }
 
     /// <summary>
+    /// Optional RC-input override, editable post-build inside the app bundle's StreamingAssets —
+    /// fix a wrong channel map / inverts / flight feel on the demo machine without a rebuild.
+    /// Inert unless remap is true; defaults mirror the values baked from hk_photo_setup.json.
+    /// </summary>
+    [Serializable] public class RcInputConfig
+    {
+        public bool remap = false;
+        public int rollCh = 0; public int pitchCh = 1; public int thrCh = 2; public int yawCh = 3;
+        public bool invertRoll = false; public bool invertPitch = true; public bool invertThr = false; public bool invertYaw = false;
+        public bool throttleCentered = true; public float deadzone = 0.05f;
+        public float maxHorizSpeed = 12f; public float maxClimbRate = 5f; public float maxYawRate = 90f; public float accel = 20f;
+        public float minAltitude = 5f; public float maxAltitude = 260f;
+    }
+
+    /// <summary>
     /// Runtime configuration, loaded once from StreamingAssets/simconfig.json.
     /// Single source of truth for capture/stream/label parameters (see SIMULATION_PLAN.md §6).
     /// </summary>
@@ -26,6 +41,7 @@ namespace DroneSim
         public CameraEntry[] cameras = new CameraEntry[0];
         public DroneConfig drone = new DroneConfig();
         public ControlConfig control = new ControlConfig();
+        public RcInputConfig rc_input = new RcInputConfig();
 
         static SimConfig _instance;
         public static SimConfig Instance => _instance ?? (_instance = Load());

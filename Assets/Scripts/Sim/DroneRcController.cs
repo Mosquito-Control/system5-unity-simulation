@@ -55,6 +55,7 @@ namespace DroneSim
         void Start()
         {
             transform.localScale = Vector3.one * SimConfig.Instance.drone.scale;
+            ApplyConfigOverride();
             ResolveDevice();
             Debug.Log(_device != null
                 ? $"[Sim] RC: device '{_device.displayName}' with {_axes.Count} axes — map roll={rollCh} pitch={pitchCh} thr={thrCh} yaw={yawCh}"
@@ -160,6 +161,22 @@ namespace DroneSim
                     // (z, rx, sliders — i.e. EdgeTX throttle + rudder) arrives 0..1
                     _axis01.Add(!(c.parent is StickControl));
                 }
+        }
+
+        /// Post-build tuning: simconfig.json (inside the app bundle's StreamingAssets) can override
+        /// the baked channel map / inverts / flight feel — set rc_input.remap = true there.
+        void ApplyConfigOverride()
+        {
+            var ov = SimConfig.Instance.rc_input;
+            if (ov == null || !ov.remap) return;
+            rollCh = ov.rollCh; pitchCh = ov.pitchCh; thrCh = ov.thrCh; yawCh = ov.yawCh;
+            invertRoll = ov.invertRoll; invertPitch = ov.invertPitch;
+            invertThr = ov.invertThr; invertYaw = ov.invertYaw;
+            throttleCentered = ov.throttleCentered; deadzone = ov.deadzone;
+            maxHorizSpeed = ov.maxHorizSpeed; maxClimbRate = ov.maxClimbRate;
+            maxYawRate = ov.maxYawRate; accel = ov.accel;
+            minAltitude = ov.minAltitude; maxAltitude = ov.maxAltitude;
+            Debug.Log("[Sim] RC: rc_input override active (simconfig.json)");
         }
 
         /// One-line raw vs mapped dump (L key) — verify the channel map on any machine via the log.

@@ -74,6 +74,25 @@
     "scale": 6.0,
     "path_speed_mps": 10.0
   },
+  "rc_input": {
+    "remap": false,
+    "rollCh": 0,
+    "pitchCh": 1,
+    "thrCh": 2,
+    "yawCh": 3,
+    "invertRoll": false,
+    "invertPitch": true,
+    "invertThr": false,
+    "invertYaw": false,
+    "throttleCentered": true,
+    "deadzone": 0.05,
+    "maxHorizSpeed": 12.0,
+    "maxClimbRate": 5.0,
+    "maxYawRate": 90.0,
+    "accel": 20.0,
+    "minAltitude": 5.0,
+    "maxAltitude": 260.0
+  },
   "control": {
     "udp_port": 9871,
     "failsafe_ms": 250,
