@@ -50,6 +50,7 @@ namespace DroneSim
         float _yawDeg;
         InputDevice _device;
         readonly List<AxisControl> _axes = new List<AxisControl>();
+        readonly List<bool> _axis01 = new List<bool>(); // Unity's HID fallback normalizes non-stick axes to 0..1 (centre 0.5)
 
         void Start()
         {
@@ -65,6 +66,7 @@ namespace DroneSim
         {
             var kb = Keyboard.current;
             if (kb != null && kb[resetKey].wasPressedThisFrame) DoReset();
+            if (kb != null && kb.lKey.wasPressedThisFrame && _axes.Count > 0) DumpAxes();
 
             float roll, pitch, yaw, climb;
             ReadInputs(out roll, out pitch, out yaw, out climb);
@@ -125,7 +127,14 @@ namespace DroneSim
             return Mathf.Clamp(invert ? -s : s, -1f, 1f);
         }
 
-        float Axis(int idx) => (idx >= 0 && idx < _axes.Count) ? _axes[idx].ReadValue() : 0f;
+        float Axis(int idx)
+        {
+            if (idx < 0 || idx >= _axes.Count) return 0f;
+            float v = _axes[idx].ReadValue();
+            // re-centre 0..1 HID axes to the signed -1..1 the flight maths expects
+            // (browser Gamepad API shows these signed; Unity does not — see remote.jpeg survey)
+            return _axis01[idx] ? v * 2f - 1f : v;
+        }
 
         void ResolveDevice()
         {
@@ -139,11 +148,27 @@ namespace DroneSim
 
             _device = dev;
             _axes.Clear();
+            _axis01.Clear();
             if (_device == null) return;
             // leaf analog axes only: AxisControl covers stick x/y, twist, throttle, sliders;
             // ButtonControl derives from AxisControl, so exclude it (digital, not a channel)
             foreach (var c in _device.allControls)
-                if (c is AxisControl ac && !(c is ButtonControl)) _axes.Add(ac);
+                if (c is AxisControl ac && !(c is ButtonControl))
+                {
+                    _axes.Add(ac);
+                    // stick x/y come pre-normalized to -1..1; every other HID axis
+                    // (z, rx, sliders — i.e. EdgeTX throttle + rudder) arrives 0..1
+                    _axis01.Add(!(c.parent is StickControl));
+                }
+        }
+
+        /// One-line raw vs mapped dump (L key) — verify the channel map on any machine via the log.
+        void DumpAxes()
+        {
+            var parts = new List<string>();
+            for (int i = 0; i < _axes.Count; i++)
+                parts.Add($"a{i}={_axes[i].ReadValue():F2}{(_axis01[i] ? "(01)" : "")}->{Axis(i):F2}");
+            Debug.Log($"[Sim] RC axes: {string.Join(" ", parts)}");
         }
 
         void DoReset()
