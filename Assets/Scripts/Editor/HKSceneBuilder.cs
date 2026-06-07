@@ -52,6 +52,17 @@ public static class HKSceneBuilder
         public float startOffset = 0f;
         public Vec3 droneTint;
     }
+    [Serializable] class RcCfg
+    {
+        public bool enabled = false;
+        public Vec3 spawn = new Vec3();
+        public float yawDeg = 0f;            // 0 = facing north (+Z)
+        public float maxHorizSpeed = 12f, maxClimbRate = 5f, maxYawRate = 90f, accel = 20f;
+        public float minAltitude = 5f, maxAltitude = 260f, deadzone = 0.05f;
+        public int rollCh = 0, pitchCh = 1, thrCh = 2, yawCh = 3;
+        public bool invertRoll = false, invertPitch = true, invertThr = false, invertYaw = false;
+        public bool throttleCentered = true;
+    }
     [Serializable] class WaterCfg
     {
         public bool enabled = false;
@@ -74,6 +85,7 @@ public static class HKSceneBuilder
         public string skyPanorama = "";        // HDRI texture asset path; non-empty switches to panoramic skybox
         public float skyPanoExposure = 1.0f;
         public float skyPanoRotation = 0f;
+        public float skyDriftSpeed = 0.4f;     // deg/sec runtime panorama spin (clouds drift); 0 = static sky
         public float vignette = 0.18f;
         public float grain = 0f;               // FilmGrain intensity (sensor noise)
         public float grainResponse = 0.6f;     // lower = noise survives into mids/highlights like a real sensor
@@ -110,6 +122,7 @@ public static class HKSceneBuilder
         public LookCfg look = new LookCfg();
         public CamDef spectator;
         public CamDef vista;
+        public RcCfg rc;
     }
 
     static Cfg Load()
@@ -517,6 +530,61 @@ public static class HKSceneBuilder
             if (ch.name.StartsWith("Drone_") && int.TryParse(ch.name.Substring(6), out idx) && idx >= cfg.paths.Length)
                 UnityEngine.Object.DestroyImmediate(ch.gameObject);
         }
+
+        // RC-controlled drone (Phase 2): a hand-flown drone alongside the autopilot ones.
+        // Lives under "Drones" so LabelPublisher captures + labels it like the rest (next id).
+        var rcExisting = dronesRoot.transform.Find("Drone_RC");
+        if (cfg.rc != null && cfg.rc.enabled)
+        {
+            GameObject rcDrone;
+            if (rcExisting == null)
+            {
+                rcDrone = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                rcDrone.name = "Drone_RC";
+                rcDrone.transform.SetParent(dronesRoot.transform);
+            }
+            else rcDrone = rcExisting.gameObject;
+
+            // strip the spline follower, drive it with the RC controller instead
+            var follower = rcDrone.GetComponent<DroneSim.DronePathFollower>();
+            if (follower != null) UnityEngine.Object.DestroyImmediate(follower);
+            var rcc = rcDrone.GetComponent<DroneSim.DroneRcController>()
+                      ?? rcDrone.AddComponent<DroneSim.DroneRcController>();
+
+            var rc = cfg.rc;
+            rcc.spawnPos = rc.spawn.V; rcc.spawnYawDeg = rc.yawDeg;
+            rcc.maxHorizSpeed = rc.maxHorizSpeed; rcc.maxClimbRate = rc.maxClimbRate;
+            rcc.maxYawRate = rc.maxYawRate; rcc.accel = rc.accel;
+            rcc.minAltitude = rc.minAltitude; rcc.maxAltitude = rc.maxAltitude;
+            rcc.deadzone = rc.deadzone;
+            rcc.rollCh = rc.rollCh; rcc.pitchCh = rc.pitchCh; rcc.thrCh = rc.thrCh; rcc.yawCh = rc.yawCh;
+            rcc.invertRoll = rc.invertRoll; rcc.invertPitch = rc.invertPitch;
+            rcc.invertThr = rc.invertThr; rcc.invertYaw = rc.invertYaw;
+            rcc.throttleCentered = rc.throttleCentered;
+
+            rcDrone.transform.position = rc.spawn.V;
+            rcDrone.transform.rotation = Quaternion.Euler(0f, rc.yawDeg, 0f);
+
+            // pilot view: V cycles chase / onboard gimbal / spectator on the screen camera
+            var spec = GameObject.Find("SpectatorCamera");
+            if (spec != null)
+            {
+                var pilot = spec.GetComponent<DroneSim.RcPilotCamera>()
+                            ?? spec.AddComponent<DroneSim.RcPilotCamera>();
+                pilot.target = rcDrone.transform;
+            }
+            else Debug.LogWarning("[HK] rc: no SpectatorCamera found — pilot view not wired");
+
+            report.Add($"rc: spawn={rc.spawn.V:F0} yaw={rc.yawDeg:F0} pilotCam={(spec != null ? "wired" : "MISSING")}");
+        }
+        else if (rcExisting != null)
+        {
+            UnityEngine.Object.DestroyImmediate(rcExisting.gameObject); // RC disabled in config
+            var specCam = GameObject.Find("SpectatorCamera");
+            var stalePilot = specCam != null ? specCam.GetComponent<DroneSim.RcPilotCamera>() : null;
+            if (stalePilot != null) UnityEngine.Object.DestroyImmediate(stalePilot);
+        }
+
         Debug.Log("[HK] PATHS: " + string.Join(" | ", report));
         Save();
     }
@@ -576,6 +644,16 @@ public static class HKSceneBuilder
             RenderSettings.skybox = sky;
         }
         DynamicGI.UpdateEnvironment(); // ambient light follows the skybox
+
+        // runtime cloud drift: SkyDrift slowly spins the panorama so the baked clouds move
+        var driftGo = GameObject.Find("SkyDrift");
+        if (cfg.skyDriftSpeed > 0f && !string.IsNullOrEmpty(cfg.skyPanorama))
+        {
+            if (driftGo == null) driftGo = new GameObject("SkyDrift");
+            var sd = driftGo.GetComponent<DroneSim.SkyDrift>() ?? driftGo.AddComponent<DroneSim.SkyDrift>();
+            sd.degreesPerSecond = cfg.skyDriftSpeed;
+        }
+        else if (driftGo != null) UnityEngine.Object.DestroyImmediate(driftGo);
 
         // water plane (dusk reflections; covers the painted satellite water near the demo zone)
         var water = GameObject.Find("HarborWater");
@@ -653,6 +731,32 @@ public static class HKSceneBuilder
         EditorUtility.SetDirty(profile);
         AssetDatabase.SaveAssets();
         Debug.Log("[HK] LOOK applied" + (cfg.water != null && cfg.water.enabled ? " (+water plane)" : ""));
+        Save();
+    }
+
+    // ---------- 7. occlusion culling ----------
+    // The dense city occludes most of itself from each fixed surveillance camera. Baking static
+    // occlusion lets every camera skip geometry hidden behind buildings — pure GPU win, no visual
+    // change. Re-run after geometry changes (Setup/Layout/Import). City tiles are already isStatic.
+    [MenuItem("DroneSim/HK/7 Bake Occlusion")]
+    public static void BakeOcclusion()
+    {
+        OpenScene();
+        var city = City();
+        if (city == null) { Debug.LogError("[HK] run Setup first"); return; }
+
+        int flagged = 0;
+        foreach (var mf in city.GetComponentsInChildren<MeshFilter>())
+        {
+            var go = mf.gameObject;
+            var flags = GameObjectUtility.GetStaticEditorFlags(go);
+            GameObjectUtility.SetStaticEditorFlags(go,
+                flags | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+            flagged++;
+        }
+        Save(); // occlusion bake reads the saved scene
+        StaticOcclusionCulling.Compute();
+        Debug.Log($"[HK] OCCLUSION: flagged {flagged} meshes, baked (data {StaticOcclusionCulling.umbraDataSize} bytes)");
         Save();
     }
 

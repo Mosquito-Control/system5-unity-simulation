@@ -160,11 +160,11 @@ namespace DroneSim
         bool IsOccluded(Vector3 from, Bounds b)
         {
             if (RayClear(from, b.center)) return false;
-            Vector3 e = b.extents; // 4 alternating corners suffice for a partial-visibility test
+            // center + 2 opposite corners: a cheap partial-visibility test against the city mesh
+            // colliders (this runs for every camera x drone every frame, so ray count matters)
+            Vector3 e = b.extents;
             if (RayClear(from, b.center + new Vector3(e.x, e.y, e.z))) return false;
-            if (RayClear(from, b.center + new Vector3(-e.x, e.y, -e.z))) return false;
-            if (RayClear(from, b.center + new Vector3(e.x, -e.y, -e.z))) return false;
-            if (RayClear(from, b.center + new Vector3(-e.x, -e.y, e.z))) return false;
+            if (RayClear(from, b.center + new Vector3(-e.x, -e.y, -e.z))) return false;
             return true;
         }
 

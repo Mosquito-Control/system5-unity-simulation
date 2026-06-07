@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace DroneSim
 {
-    [Serializable] public class CaptureConfig { public int width = 1280; public int height = 720; public int fps = 15; public int bitrate_kbps = 4000; }
+    [Serializable] public class CaptureConfig { public int width = 1280; public int height = 720; public int fps = 15; public int bitrate_kbps = 4000; public int render_fps = 0; public int cams_per_frame = 0; }
     [Serializable] public class EncoderConfig { public string mode = "auto"; public string ffmpeg_path = "ffmpeg"; }
     [Serializable] public class RtspConfig { public string base_url = "rtsp://127.0.0.1:8554/"; }
     [Serializable] public class LabelsConfig { public string host = "127.0.0.1"; public int port = 9870; public bool embed_frame_id = false; public int min_bbox_px = 2; }

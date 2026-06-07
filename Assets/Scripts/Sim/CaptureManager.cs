@@ -28,6 +28,8 @@ namespace DroneSim
         readonly List<CamSlot> _slots = new List<CamSlot>();
         public IReadOnlyList<CamSlot> Slots => _slots;
         bool _sizeWarned;
+        int _camsPerFrame; // how many cameras render each frame (round-robin when < slot count)
+        int _cursor;       // rotation start index for the current frame
 
         void Start()
         {
@@ -56,8 +58,30 @@ namespace DroneSim
                                           cfg.rtsp.base_url.TrimEnd('/') + "/" + entry.name);
                 _slots.Add(new CamSlot { cam = cam, rt = rt, pipe = pipe, name = entry.name });
             }
-            Debug.Log($"[Sim] Capture: {_slots.Count} camera(s) active");
+
+            // When the loop runs faster than the stream rate (render_fps > fps), render only a slice
+            // of the cameras each frame so each still streams at ~fps — keeps the live pilot view fast.
+            int n = _slots.Count;
+            int loopFps = cfg.capture.render_fps > cfg.capture.fps ? cfg.capture.render_fps : cfg.capture.fps;
+            if (cfg.capture.cams_per_frame > 0)
+                _camsPerFrame = Mathf.Clamp(cfg.capture.cams_per_frame, 1, Mathf.Max(1, n));
+            else if (loopFps > cfg.capture.fps && cfg.capture.fps > 0)
+                _camsPerFrame = Mathf.Clamp(Mathf.CeilToInt(n * (float)cfg.capture.fps / loopFps), 1, Mathf.Max(1, n));
+            else
+                _camsPerFrame = n;
+
+            Debug.Log($"[Sim] Capture: {n} camera(s) active, {_camsPerFrame}/frame ({(_camsPerFrame < n ? "round-robin" : "all")})");
             StartCoroutine(CaptureLoop());
+        }
+
+        void Update()
+        {
+            int n = _slots.Count;
+            if (n == 0) return;
+            if (_camsPerFrame >= n) { for (int i = 0; i < n; i++) _slots[i].cam.enabled = true; return; }
+            for (int i = 0; i < n; i++) _slots[i].cam.enabled = false;
+            for (int k = 0; k < _camsPerFrame; k++) _slots[(_cursor + k) % n].cam.enabled = true;
+            _cursor = (_cursor + _camsPerFrame) % n;
         }
 
         IEnumerator CaptureLoop()
@@ -65,9 +89,10 @@ namespace DroneSim
             var wait = new WaitForEndOfFrame();
             while (true)
             {
-                yield return wait; // all cameras have rendered this frame's state
+                yield return wait; // cameras enabled this frame have rendered their state
                 foreach (var s in _slots)
                 {
+                    if (!s.cam.enabled) continue; // round-robin: only read back cameras rendered this frame
                     var slot = s; // closure copy
                     AsyncGPUReadback.Request(slot.rt, 0, TextureFormat.RGBA32, req =>
                     {
