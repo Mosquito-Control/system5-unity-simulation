@@ -29,7 +29,7 @@ Download the prebuilt app from the team repo's releases:
 
 ```bash
 cd ~
-curl -L -o DroneSim-macOS.zip https://github.com/Mosquito-Control/system4-unity-simulation/releases/download/v0.4-rc-demo/DroneSim-macOS.zip
+curl -L -o DroneSim-macOS.zip https://github.com/Mosquito-Control/system5-unity-simulation/releases/download/v0.4-rc-demo/DroneSim-macOS.zip
 unzip -q DroneSim-macOS.zip
 ```
 
