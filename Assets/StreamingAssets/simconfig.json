@@ -71,7 +71,7 @@
     }
   ],
   "drone": {
-    "scale": 4.0,
+    "scale": 6.0,
     "path_speed_mps": 10.0
   },
   "control": {
