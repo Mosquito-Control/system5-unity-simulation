@@ -75,6 +75,7 @@
     "path_speed_mps": 10.0
   },
   "rc_input": {
+    "useJoystick": false,
     "remap": false,
     "rollCh": 0,
     "pitchCh": 1,

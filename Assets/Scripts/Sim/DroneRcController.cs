@@ -30,6 +30,10 @@ namespace DroneSim
         public float maxAltitude = 260f;
         [Range(0f, 45f)] public float maxLeanDeg = 25f; // cosmetic body tilt
 
+        [Header("Input")]
+        [Tooltip("false = keyboard only; a plugged-in radio is ignored entirely (demo-safe kill switch, rc_input.useJoystick)")]
+        public bool useJoystick = true;
+
         [Header("Channel map (axis indices on the detected device)")]
         public int rollCh = 0;
         public int pitchCh = 1;
@@ -57,7 +61,9 @@ namespace DroneSim
             transform.localScale = Vector3.one * SimConfig.Instance.drone.scale;
             ApplyConfigOverride();
             ResolveDevice();
-            Debug.Log(_device != null
+            Debug.Log(!useJoystick
+                ? "[Sim] RC: keyboard mode (joystick disabled via rc_input.useJoystick) — WASD / QE / Shift+Ctrl, R to reset"
+                : _device != null
                 ? $"[Sim] RC: device '{_device.displayName}' with {_axes.Count} axes — map roll={rollCh} pitch={pitchCh} thr={thrCh} yaw={yawCh}"
                 : "[Sim] RC: no joystick/gamepad found — keyboard fallback (WASD / QE / Shift+Ctrl), R to reset");
             DoReset();
@@ -67,7 +73,7 @@ namespace DroneSim
         {
             var kb = Keyboard.current;
             if (kb != null && kb[resetKey].wasPressedThisFrame) DoReset();
-            if (kb != null && kb.lKey.wasPressedThisFrame && _axes.Count > 0) DumpAxes();
+            if (kb != null && kb.lKey.wasPressedThisFrame) DumpAxes();
 
             float roll, pitch, yaw, climb;
             ReadInputs(out roll, out pitch, out yaw, out climb);
@@ -139,6 +145,7 @@ namespace DroneSim
 
         void ResolveDevice()
         {
+            if (!useJoystick) { _device = null; _axes.Clear(); _axis01.Clear(); return; }
             InputDevice dev = Joystick.current;
             if (dev == null)
             {
@@ -168,7 +175,9 @@ namespace DroneSim
         void ApplyConfigOverride()
         {
             var ov = SimConfig.Instance.rc_input;
-            if (ov == null || !ov.remap) return;
+            if (ov == null) return;
+            useJoystick = ov.useJoystick; // always honoured, independent of remap — the demo kill switch
+            if (!ov.remap) return;
             rollCh = ov.rollCh; pitchCh = ov.pitchCh; thrCh = ov.thrCh; yawCh = ov.yawCh;
             invertRoll = ov.invertRoll; invertPitch = ov.invertPitch;
             invertThr = ov.invertThr; invertYaw = ov.invertYaw;
@@ -180,12 +189,23 @@ namespace DroneSim
         }
 
         /// One-line raw vs mapped dump (L key) — verify the channel map on any machine via the log.
+        /// Always logs, even with no device, so a silent L never leaves you guessing.
         void DumpAxes()
         {
+            if (!useJoystick)
+            {
+                Debug.Log("[Sim] RC axes: joystick disabled (rc_input.useJoystick=false) — flying on keyboard");
+                return;
+            }
+            if (_axes.Count == 0)
+            {
+                Debug.Log($"[Sim] RC axes: no analog axes (device={(_device != null ? _device.displayName : "none detected")})");
+                return;
+            }
             var parts = new List<string>();
             for (int i = 0; i < _axes.Count; i++)
                 parts.Add($"a{i}={_axes[i].ReadValue():F2}{(_axis01[i] ? "(01)" : "")}->{Axis(i):F2}");
-            Debug.Log($"[Sim] RC axes: {string.Join(" ", parts)}");
+            Debug.Log($"[Sim] RC axes [{_device.displayName}]: {string.Join(" ", parts)}");
         }
 
         void DoReset()

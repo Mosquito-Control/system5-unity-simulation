@@ -19,6 +19,7 @@ namespace DroneSim
     /// </summary>
     [Serializable] public class RcInputConfig
     {
+        public bool useJoystick = true;  // false = keyboard-only flying; plugged-in radio ignored (always honoured)
         public bool remap = false;
         public int rollCh = 0; public int pitchCh = 1; public int thrCh = 2; public int yawCh = 3;
         public bool invertRoll = false; public bool invertPitch = true; public bool invertThr = false; public bool invertYaw = false;
