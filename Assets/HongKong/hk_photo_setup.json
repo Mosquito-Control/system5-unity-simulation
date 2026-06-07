@@ -588,8 +588,8 @@
     "enabled": true,
     "spawn": {
       "x": -224,
-      "y": 80,
-      "z": -37
+      "y": 85,
+      "z": -175
     },
     "yawDeg": 0,
     "maxHorizSpeed": 12,
