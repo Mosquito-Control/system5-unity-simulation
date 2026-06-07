@@ -85,6 +85,7 @@ public static class HKSceneBuilder
         public string skyPanorama = "";        // HDRI texture asset path; non-empty switches to panoramic skybox
         public float skyPanoExposure = 1.0f;
         public float skyPanoRotation = 0f;
+        public float skyDriftSpeed = 0.4f;     // deg/sec runtime panorama spin (clouds drift); 0 = static sky
         public float vignette = 0.18f;
         public float grain = 0f;               // FilmGrain intensity (sensor noise)
         public float grainResponse = 0.6f;     // lower = noise survives into mids/highlights like a real sensor
@@ -643,6 +644,16 @@ public static class HKSceneBuilder
             RenderSettings.skybox = sky;
         }
         DynamicGI.UpdateEnvironment(); // ambient light follows the skybox
+
+        // runtime cloud drift: SkyDrift slowly spins the panorama so the baked clouds move
+        var driftGo = GameObject.Find("SkyDrift");
+        if (cfg.skyDriftSpeed > 0f && !string.IsNullOrEmpty(cfg.skyPanorama))
+        {
+            if (driftGo == null) driftGo = new GameObject("SkyDrift");
+            var sd = driftGo.GetComponent<DroneSim.SkyDrift>() ?? driftGo.AddComponent<DroneSim.SkyDrift>();
+            sd.degreesPerSecond = cfg.skyDriftSpeed;
+        }
+        else if (driftGo != null) UnityEngine.Object.DestroyImmediate(driftGo);
 
         // water plane (dusk reflections; covers the painted satellite water near the demo zone)
         var water = GameObject.Find("HarborWater");

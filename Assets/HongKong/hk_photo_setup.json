@@ -423,6 +423,7 @@
     "skyPanorama": "Assets/HongKongPhoto/Sky/kloofendal_48d_partly_cloudy_puresky_4k.hdr",
     "skyPanoExposure": 0.94,
     "skyPanoRotation": 0,
+    "skyDriftSpeed": 0.4,
     "vignette": 0.21,
     "grain": 0.111,
     "grainResponse": 0.55,
