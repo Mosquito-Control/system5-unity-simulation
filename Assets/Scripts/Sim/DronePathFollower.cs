@@ -15,6 +15,8 @@ namespace DroneSim
         [Tooltip("< 0 means: use drone.path_speed_mps from simconfig.json")]
         public float speedOverride = -1f;
         [Range(0f, 45f)] public float maxBankDeg = 25f;
+        [Tooltip("Phase offset along the loop [0..1] — lets multiple drones share airspace without bunching")]
+        [Range(0f, 1f)] public float startOffset = 0f;
 
         const int SamplesPerSegment = 24;
 
@@ -32,7 +34,11 @@ namespace DroneSim
             _speed = speedOverride > 0f ? speedOverride : cfg.drone.path_speed_mps;
             transform.localScale = Vector3.one * cfg.drone.scale;
             BuildSpline();
-            if (_samples != null) transform.position = _samples[0];
+            if (_samples != null)
+            {
+                _dist = startOffset * _totalLen;
+                transform.position = SampleAt(_dist);
+            }
         }
 
         void BuildSpline()

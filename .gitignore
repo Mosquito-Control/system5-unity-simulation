@@ -120,3 +120,26 @@ Captures/
 /Assets/_Recovery.meta
 /Assets/Screenshots.meta
 Tools/viewer_grid.jpg
+
+# PlanD photo-tile payloads: ~1.8 GB of downloaded OBJ/MTL/JPG (one tile >100 MB =
+# GitHub hard reject). The .meta files STAY versioned so asset GUIDs — and the scene's
+# tile references — survive a fresh clone. Restore payloads with
+# Tools/download_pland_tiles.py, then "DroneSim/HK/P Import Photo Tiles".
+Assets/HongKongPhoto/**/*.obj
+Assets/HongKongPhoto/**/*.mtl
+Assets/HongKongPhoto/**/*.jpg
+Assets/HongKongPhoto/**/*.jpeg
+Assets/HongKongPhoto/**/*.png
+
+# The photo scene serializes the despiked/water-trimmed tile-mesh COPIES inline ->
+# 1.16 GB of YAML, far past GitHub's 100 MB limit. Its .meta stays versioned (the
+# EditorBuildSettings GUID ref survives); regenerate the scene from the committed
+# hk_photo_setup.json via the DroneSim/HK/P pipeline after restoring tile payloads.
+Assets/Scenes/HongKongPhotoScene.unity
+
+# HKAutoRun transient state (consumed flag files)
+Tools/hk_autorun.json
+Tools/hk_autorun.json.done
+
+# Claude Code local session state
+.claude/

@@ -15,6 +15,12 @@ ffmpeg -encoders | grep videotoolbox     # must list h264_videotoolbox (hardware
 mkdir -p ~/mediamtx && cd ~/mediamtx
 curl -L -o mtx.tar.gz https://github.com/bluenviron/mediamtx/releases/download/v1.19.0/mediamtx_v1.19.0_darwin_arm64.tar.gz
 tar xzf mtx.tar.gz
+
+# REQUIRED: raise the per-reader packet queue. The default (512) overflows when all 12
+# encoders emit GOP-aligned keyframes in the same instant; readers then get frames with
+# the bottom slices chopped off (bottom-band corruption on the densest cams).
+sed -i '' 's/^writeQueueSize: .*/writeQueueSize: 8192/' mediamtx.yml
+grep writeQueueSize mediamtx.yml   # must print: writeQueueSize: 8192
 ```
 
 ## 2. Install the build
@@ -23,7 +29,7 @@ Download the prebuilt app from the team repo's releases:
 
 ```bash
 cd ~
-curl -L -o DroneSim-macOS.zip https://github.com/Tion-ping/system4-unity-simulation/releases/download/v0.2-hongkong/DroneSim-macOS.zip
+curl -L -o DroneSim-macOS.zip https://github.com/Tion-ping/system4-unity-simulation/releases/download/v0.3-demo/DroneSim-macOS.zip
 unzip -q DroneSim-macOS.zip
 ```
 

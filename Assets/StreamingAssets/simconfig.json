@@ -1,18 +1,80 @@
 {
-  "capture": { "width": 1280, "height": 720, "fps": 15, "bitrate_kbps": 4000 },
-  "encoder": { "mode": "auto", "ffmpeg_path": "ffmpeg" },
-  "rtsp": { "base_url": "rtsp://127.0.0.1:8554/" },
-  "labels": { "host": "127.0.0.1", "port": 9870, "embed_frame_id": false, "min_bbox_px": 2 },
+  "capture": {
+    "width": 1280,
+    "height": 720,
+    "fps": 15,
+    "bitrate_kbps": 4000
+  },
+  "encoder": {
+    "mode": "auto",
+    "ffmpeg_path": "ffmpeg"
+  },
+  "rtsp": {
+    "base_url": "rtsp://127.0.0.1:8554/"
+  },
+  "labels": {
+    "host": "127.0.0.1",
+    "port": 9870,
+    "embed_frame_id": false,
+    "min_bbox_px": 2
+  },
   "cameras": [
-    { "name": "cam0", "enabled": true },
-    { "name": "cam1", "enabled": true },
-    { "name": "cam2", "enabled": true },
-    { "name": "cam3", "enabled": true },
-    { "name": "cam4", "enabled": true },
-    { "name": "cam5", "enabled": true },
-    { "name": "cam6", "enabled": true },
-    { "name": "cam7", "enabled": true }
+    {
+      "name": "cam0",
+      "enabled": true
+    },
+    {
+      "name": "cam1",
+      "enabled": true
+    },
+    {
+      "name": "cam2",
+      "enabled": true
+    },
+    {
+      "name": "cam3",
+      "enabled": true
+    },
+    {
+      "name": "cam4",
+      "enabled": true
+    },
+    {
+      "name": "cam5",
+      "enabled": true
+    },
+    {
+      "name": "cam6",
+      "enabled": true
+    },
+    {
+      "name": "cam7",
+      "enabled": true
+    },
+    {
+      "name": "cam8",
+      "enabled": true
+    },
+    {
+      "name": "cam9",
+      "enabled": true
+    },
+    {
+      "name": "cam10",
+      "enabled": true
+    },
+    {
+      "name": "cam11",
+      "enabled": true
+    }
   ],
-  "drone": { "scale": 4.0, "path_speed_mps": 10.0 },
-  "control": { "udp_port": 9871, "failsafe_ms": 250, "mode": "autopilot" }
+  "drone": {
+    "scale": 4.0,
+    "path_speed_mps": 10.0
+  },
+  "control": {
+    "udp_port": 9871,
+    "failsafe_ms": 250,
+    "mode": "autopilot"
+  }
 }

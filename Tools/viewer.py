@@ -107,6 +107,10 @@ class LabelListener(threading.Thread):
             return self.history[-1] if self.history else None
 
 
+# per-drone box colors (BGR): d0 green, d1 orange, d2 cyan, then repeat
+DRONE_COLORS = [(0, 255, 0), (0, 160, 255), (255, 220, 0)]
+
+
 def draw_overlay(tile, cam_block, scale_x, scale_y, latency_ms):
     for det in cam_block.get("detections", []):
         x1, y1, x2, y2 = det["bbox_xyxy"]
@@ -116,7 +120,9 @@ def draw_overlay(tile, cam_block, scale_x, scale_y, latency_ms):
         if p2[0] - p1[0] < 6:
             cx = (p1[0] + p2[0]) // 2
             p1, p2 = (cx - 6, p1[1] - 4), (cx + 6, p2[1] + 4)
-        color = (0, 255, 0) if not det.get("truncated") else (0, 200, 255)
+        color = DRONE_COLORS[det.get("drone_id", 0) % len(DRONE_COLORS)]
+        if det.get("truncated"):
+            color = tuple(int(c * 0.6) for c in color)
         cv2.rectangle(tile, p1, p2, color, 1)
         cv2.putText(tile, f"d{det['drone_id']} {det['dist_m']:.0f}m",
                     (p1[0], max(12, p1[1] - 4)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
