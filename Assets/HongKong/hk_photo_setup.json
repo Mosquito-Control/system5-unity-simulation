@@ -26,7 +26,7 @@
         "z": -80
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam1",
@@ -42,7 +42,7 @@
         "z": 60
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam2",
@@ -58,7 +58,7 @@
         "z": -80
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam3",
@@ -74,7 +74,7 @@
         "z": -175
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam4",
@@ -90,7 +90,7 @@
         "z": -175
       },
       "fov": 55,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam5",
@@ -106,7 +106,7 @@
         "z": -160
       },
       "fov": 55,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam6",
@@ -122,7 +122,7 @@
         "z": 30
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam7",
@@ -138,7 +138,7 @@
         "z": -90
       },
       "fov": 55,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam9",
@@ -154,7 +154,7 @@
         "z": 97
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam10",
@@ -170,7 +170,7 @@
         "z": 97
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam11",
@@ -186,7 +186,7 @@
         "z": 97
       },
       "fov": 60,
-      "far": 4000
+      "far": 1800
     },
     {
       "name": "cam8",
@@ -202,7 +202,7 @@
         "z": -70
       },
       "fov": 55,
-      "far": 4000
+      "far": 1800
     }
   ],
   "paths": [
@@ -527,7 +527,7 @@
     "contrast": 25.5,
     "saturation": 43,
     "temperature": 4,
-    "shadowDistance": 1500,
+    "shadowDistance": 600,
     "emissionIntensity": 0.0,
     "emissionTint": {
       "x": 1.0,
@@ -583,5 +583,30 @@
     },
     "fov": 60,
     "far": 20000
+  },
+  "rc": {
+    "enabled": true,
+    "spawn": {
+      "x": -224,
+      "y": 80,
+      "z": -37
+    },
+    "yawDeg": 0,
+    "maxHorizSpeed": 12,
+    "maxClimbRate": 5,
+    "maxYawRate": 90,
+    "accel": 20,
+    "minAltitude": 5,
+    "maxAltitude": 260,
+    "deadzone": 0.05,
+    "rollCh": 0,
+    "pitchCh": 1,
+    "thrCh": 2,
+    "yawCh": 3,
+    "invertRoll": false,
+    "invertPitch": true,
+    "invertThr": false,
+    "invertYaw": false,
+    "throttleCentered": true
   }
 }

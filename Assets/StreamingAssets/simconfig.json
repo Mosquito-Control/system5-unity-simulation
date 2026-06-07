@@ -3,7 +3,9 @@
     "width": 1280,
     "height": 720,
     "fps": 15,
-    "bitrate_kbps": 4000
+    "bitrate_kbps": 4000,
+    "render_fps": 45,
+    "cams_per_frame": 0
   },
   "encoder": {
     "mode": "auto",
